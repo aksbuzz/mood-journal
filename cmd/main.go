@@ -15,7 +15,7 @@ import (
 func Execute() {
 	ctx, cancel := context.WithCancel(context.Background())
 	db := db.NewDB()
-	if err := db.Open(); err != nil {
+	if err := db.Open(ctx); err != nil {
 		cancel()
 		fmt.Printf("failed to open db, error: %+v\n", err)
 		return
