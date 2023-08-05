@@ -14,6 +14,12 @@ var migrationFS embed.FS
 //go:embed seed
 var seedFS embed.FS
 
+var (
+	DatabaseFileName = "moods.db"
+	SchemaFileName   = "Schema.sql"
+	SeedFileName     = "Seed.sql"
+)
+
 type DB struct {
 	DBInstance *sql.DB
 }
@@ -23,16 +29,14 @@ func NewDB() *DB {
 }
 
 func (db *DB) Open(ctx context.Context) (err error) {
-	fileName := "moods.db"
-
-	if _, err := os.Stat(fileName); os.IsNotExist(err) {
-		file, err := os.Create(fileName)
+	if _, err := os.Stat(DatabaseFileName); os.IsNotExist(err) {
+		file, err := os.Create(DatabaseFileName)
 		if err != nil {
 			return err
 		}
 		defer file.Close()
 	}
-	sqliteDB, err := sql.Open("sqlite", "moods.db")
+	sqliteDB, err := sql.Open("sqlite", DatabaseFileName)
 	if err != nil {
 		return err
 	}
@@ -53,8 +57,7 @@ func (db *DB) Close() (err error) {
 }
 
 func (db *DB) applyMigrations(ctx context.Context) (err error) {
-	fileName := "Schema.sql"
-	schemaPath := fmt.Sprintf("migration/%s", fileName)
+	schemaPath := fmt.Sprintf("migration/%s", SchemaFileName)
 	buf, err := migrationFS.ReadFile(schemaPath)
 	if err != nil {
 		return err
@@ -80,8 +83,7 @@ func (db *DB) seedDB(ctx context.Context) (err error) {
 		return nil
 	}
 
-	fileName := "Mood.sql"
-	seedPath := fmt.Sprintf("seed/%s", fileName)
+	seedPath := fmt.Sprintf("seed/%s", SeedFileName)
 	buf, err := seedFS.ReadFile(seedPath)
 	if err != nil {
 		return err

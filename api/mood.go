@@ -6,14 +6,14 @@ import (
 )
 
 type Mood string
-type MoodDate int
+type MoodTimeRange int
 
 const (
 	Happy  Mood = "Happy"
 	Normal Mood = "Normal"
 	Sad    Mood = "Sad"
 
-	Week MoodDate = iota
+	Week MoodTimeRange = iota
 	Month
 	Year
 	All
@@ -32,7 +32,7 @@ func (m Mood) String() string {
 	}
 }
 
-func ParseMoodDate(s string) MoodDate {
+func ParseMoodTimeRange(s string) MoodTimeRange {
 	switch s {
 	case "Week":
 		return Week
@@ -50,13 +50,15 @@ func ParseMoodDate(s string) MoodDate {
 type CreateMood struct {
 	ID          int       `json:"id"`
 	Mood        Mood      `json:"mood"`
+	UserId      int       `json:"user_id"`
 	Description string    `json:"description"`
 	Date        time.Time `json:"date"`
 }
 
 type FindMood struct {
-	Mood Mood     `json:"mood"`
-	Date MoodDate `json:"date"`
+	Mood      Mood
+	TimeRange MoodTimeRange
+	UserId    *int
 }
 
 func (m Mood) ValidateMood() error {
