@@ -17,14 +17,19 @@ func (s *Store) CreateMood(ctx context.Context, create *api.CreateMood) (*api.Cr
 	query := `
 		INSERT INTO moods (
 			mood,
+			user_id,
 			description,
 			date
 		)
-		VALUES (?, ?, ?)
-		RETURNING id, mood, description, date
+		VALUES (?, ?, ?, ?)
+		RETURNING id, mood, user_id, description, date
 	`
 
-	if err := tx.QueryRowContext(ctx, query, create.Mood, create.Description, create.Date).Scan(&create.ID, &create.Mood, &create.Description, &create.Date); err != nil {
+	if err := tx.QueryRowContext(
+		ctx, query, create.Mood, create.UserId, create.Description, create.Date,
+	).Scan(
+		&create.ID, &create.Mood, &create.UserId, &create.Description, &create.Date,
+	); err != nil {
 		return nil, FormatError(err)
 	}
 	if err := tx.Commit(); err != nil {
@@ -44,20 +49,25 @@ func (s *Store) ListMoods(ctx context.Context, find *api.FindMood) ([]*api.Creat
 	query := `SELECT * FROM moods`
 	conditions := []string{}
 
+	if v := find.UserId; v != nil {
+		conditions = append(conditions, fmt.Sprintf("user_id = '%d'", *v))
+	}
 	if find.Mood != "" {
 		conditions = append(conditions, fmt.Sprintf("mood = '%s'", find.Mood))
 	}
-	if find.Date == api.Week {
+	if find.TimeRange == api.Week {
 		conditions = append(conditions, "date >= date('now', '-7 days')")
-	} else if find.Date == api.Month {
+	} else if find.TimeRange == api.Month {
 		conditions = append(conditions, "date >= date('now', '-30 days')")
-	} else if find.Date == api.Year {
+	} else if find.TimeRange == api.Year {
 		conditions = append(conditions, "date >= date('now', '-365 days')")
 	}
 
 	if len(conditions) > 0 {
 		query += " WHERE " + joinStrings(conditions, " AND ")
 	}
+
+	query += " ORDER BY date DESC"
 
 	rows, err := tx.QueryContext(ctx, query)
 	if err != nil {
@@ -67,7 +77,9 @@ func (s *Store) ListMoods(ctx context.Context, find *api.FindMood) ([]*api.Creat
 	moodsList := make([]*api.CreateMood, 0)
 	for rows.Next() {
 		var mood api.CreateMood
-		if err := rows.Scan(&mood.ID, &mood.Mood, &mood.Description, &mood.Date); err != nil {
+		if err := rows.Scan(
+			&mood.ID, &mood.Mood, &mood.UserId, &mood.Description, &mood.Date,
+		); err != nil {
 			return nil, FormatError(err)
 		}
 		moodsList = append(moodsList, &mood)
