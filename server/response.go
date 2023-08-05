@@ -6,19 +6,30 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+type Status string
+
+const (
+	Success Status = "success"
+	Error   Status = "error"
+)
+
+func (s Status) String() string {
+	return string(s)
+}
+
 func successResponse(data interface{}) fiber.Map {
 	return fiber.Map{
-		"status": "success",
-		"data":   data,
-		"ts":     time.Now().Unix(),
+		"status":    Success.String(),
+		"data":      data,
+		"timestamp": time.Now().Unix(),
 	}
 }
 
 func errorResponse(message string, err error) fiber.Map {
 	return fiber.Map{
-		"status":  "error",
-		"message": message,
-		"data":    err.Error(),
-		"ts":      time.Now().Unix(),
+		"status":    Error.String(),
+		"message":   message,
+		"data":      err.Error(),
+		"timestamp": time.Now().Unix(),
 	}
 }

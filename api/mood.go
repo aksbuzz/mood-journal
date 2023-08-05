@@ -61,7 +61,7 @@ type FindMood struct {
 	UserId    *int
 }
 
-func (m Mood) ValidateMood() error {
+func (m Mood) Validate() error {
 	if m.String() == "" {
 		return fmt.Errorf("invalid request")
 	}

@@ -1,22 +1,16 @@
 package server
 
 import (
-	"strconv"
 	"time"
 
 	"github.com/aksbuzz/mood-journal/api"
 	"github.com/gofiber/fiber/v2"
-	"github.com/golang-jwt/jwt/v5"
 )
 
 func (s *Server) registerMoodRoutes(r fiber.Router) {
 	r.Post("/mood", func(c *fiber.Ctx) error {
 		ctx := c.Context()
-		sub, err := c.Locals("user").(*jwt.Token).Claims.GetSubject()
-		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(errorResponse("failed to get claims subject", err))
-		}
-		userId, err := strconv.Atoi(sub)
+		userId, err := getUserIdFromContext(c)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(errorResponse("failed to get user id", err))
 		}
@@ -24,10 +18,10 @@ func (s *Server) registerMoodRoutes(r fiber.Router) {
 		if err := c.BodyParser(createMood); err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(errorResponse("invalid request body", err))
 		}
-		createMood.UserId = userId
+		createMood.UserId = *userId
 		createMood.Date = time.Now()
 		createMood.Mood = api.Mood(createMood.Mood)
-		if err := createMood.Mood.ValidateMood(); err != nil {
+		if err := createMood.Mood.Validate(); err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(errorResponse("invalid request body", err))
 		}
 		mood, err := s.Store.CreateMood(ctx, createMood)
@@ -39,18 +33,14 @@ func (s *Server) registerMoodRoutes(r fiber.Router) {
 
 	r.Get("/mood", func(c *fiber.Ctx) error {
 		ctx := c.Context()
-		sub, err := c.Locals("user").(*jwt.Token).Claims.GetSubject()
-		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(errorResponse("failed to get claims subject", err))
-		}
-		userId, err := strconv.Atoi(sub)
+		userId, err := getUserIdFromContext(c)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(errorResponse("failed to get user id", err))
 		}
 		mood := c.Query("mood")
 		timeRange := c.Query("time_range")
 		findMood := &api.FindMood{
-			UserId:    &userId,
+			UserId:    userId,
 			Mood:      api.Mood(mood),
 			TimeRange: api.ParseMoodTimeRange(timeRange),
 		}
