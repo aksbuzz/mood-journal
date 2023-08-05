@@ -44,6 +44,7 @@ func NewServer(ctx context.Context, store *store.Store) (*Server, error) {
 		SigningKey: jwtware.SigningKey{Key: []byte(s.Secret)},
 	}))
 
+	s.registerUserRoutes(apiGroup)
 	s.registerMoodRoutes(apiGroup)
 	s.ping()
 

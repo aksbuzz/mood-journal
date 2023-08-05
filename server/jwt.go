@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/aksbuzz/mood-journal/api"
+	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -30,10 +31,14 @@ func generateToken(user *api.User, secret []byte) (string, error) {
 	return token.SignedString(secret)
 }
 
-// func getUserFromContext(c *fiber.Ctx) (int, error) {
-// 	user := c.Locals("user").(*jwt.Token)
-// 	sub, err := user.Claims.GetSubject()
-// 	if err != nil {
-// 		return 0, err
-// 	}
-// }
+func getUserIdFromContext(c *fiber.Ctx) (*int, error) {
+	sub, err := c.Locals("user").(*jwt.Token).Claims.GetSubject()
+	if err != nil {
+		return nil, err
+	}
+	userId, err := strconv.Atoi(sub)
+	if err != nil {
+		return nil, err
+	}
+	return &userId, nil
+}

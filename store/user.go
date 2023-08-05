@@ -27,6 +27,49 @@ func (s *Store) CreateUser(ctx context.Context, createUser *api.User) (*api.User
 	return &user, nil
 }
 
+func (s *Store) UpdateUser(ctx context.Context, updateUser *api.UpdateUser) (*api.User, error) {
+	set, args := []string{}, []any{}
+	if v := updateUser.Username; v != nil {
+		set, args = append(set, "username = ?"), append(args, *v)
+	}
+	if v := updateUser.UpdatedAt; v != nil {
+		set, args = append(set, "updated_at = ?"), append(args, *v)
+	}
+	if v := updateUser.DisplayName; v != nil {
+		set, args = append(set, "display_name = ?"), append(args, *v)
+	}
+	if v := updateUser.Email; v != nil {
+		set, args = append(set, "email = ?"), append(args, *v)
+	}
+	if v := updateUser.AvatarURL; v != nil {
+		set, args = append(set, "avatar_url = ?"), append(args, *v)
+	}
+	args = append(args, updateUser.ID)
+
+	query := `
+		UPDATE users
+		SET ` + joinStrings(set, ", ") + `
+		WHERE id = ?
+		RETURNING id,	created_at, updated_at, username, display_name, email, avatar_url
+	`
+	var user api.User
+	if err := s.db.QueryRowContext(
+		ctx, query, args...,
+	).Scan(
+		&user.ID,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+		&user.Username,
+		&user.DisplayName,
+		&user.Email,
+		&user.AvatarURL,
+	); err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
 func (s *Store) FindUser(ctx context.Context, findUser *api.FindUser) (*api.User, error) {
 	list, err := s.ListUsers(ctx, findUser)
 	if err != nil {
