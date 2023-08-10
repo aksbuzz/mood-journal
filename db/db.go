@@ -6,6 +6,8 @@ import (
 	"embed"
 	"fmt"
 	"os"
+
+	"github.com/gofiber/fiber/v2/log"
 )
 
 //go:embed migration
@@ -36,12 +38,14 @@ func (db *DB) Open(ctx context.Context) (err error) {
 		}
 		defer file.Close()
 	}
+	log.Info("Opening DB")
 	sqliteDB, err := sql.Open("sqlite", DatabaseFileName)
 	if err != nil {
 		return err
 	}
 	db.DBInstance = sqliteDB
 	// Apply Migrations
+	log.Info("Applying latest migrations")
 	if err := db.applyMigrations(ctx); err != nil {
 		return err
 	}

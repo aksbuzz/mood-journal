@@ -10,6 +10,7 @@ import (
 	"github.com/aksbuzz/mood-journal/db"
 	"github.com/aksbuzz/mood-journal/server"
 	"github.com/aksbuzz/mood-journal/store"
+	"github.com/gofiber/fiber/v2/log"
 )
 
 func Execute() {
@@ -17,7 +18,7 @@ func Execute() {
 	db := db.NewDB()
 	if err := db.Open(ctx); err != nil {
 		cancel()
-		fmt.Printf("failed to open db, error: %+v\n", err)
+		log.Error(fmt.Printf("Failed to open DB, error: %+v\n", err))
 		return
 	}
 
@@ -25,7 +26,7 @@ func Execute() {
 	s, err := server.NewServer(ctx, store)
 	if err != nil {
 		cancel()
-		fmt.Printf("faield to create server, error: %+v\n", err)
+		log.Error(fmt.Printf("Failed to create new Server, error: %+v\n", err))
 		return
 	}
 
@@ -34,14 +35,14 @@ func Execute() {
 
 	go func() {
 		sig := <-c
-		fmt.Printf("%s received.\n", sig.String())
+		log.Info(fmt.Printf("%s received.\n", sig.String()))
 		s.Shutdown()
 		cancel()
 	}()
 
 	if err := s.Start(); err != nil {
 		cancel()
-		fmt.Printf("failed to start server, error: %+v\n", err)
+		log.Error(fmt.Printf("Failed to start Server, error: %+v\n", err))
 		return
 	}
 
