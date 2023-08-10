@@ -29,7 +29,7 @@ func errorResponse(message string, err error) fiber.Map {
 	return fiber.Map{
 		"status":    Error.String(),
 		"message":   message,
-		"data":      err.Error(),
+		"errors":    err.Error(),
 		"timestamp": time.Now().Unix(),
 	}
 }
