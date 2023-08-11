@@ -144,3 +144,51 @@ func (s *Store) ListUsers(ctx context.Context, findUser *api.FindUser) ([]*api.U
 
 	return list, nil
 }
+
+func (s *Store) UpsertUserSetting(ctx context.Context, upsert *api.UserSetting) (*api.UserSetting, error) {
+	query := `
+		INSERT INTO user_settings
+		VALUES (?, ?, ?)
+		ON CONFLICT(user_id, setting_key) DO UPDATE
+		SET setting_value = EXCLUDED.setting_value
+	`
+
+	if _, err := s.db.ExecContext(ctx, query, &upsert.UserId, &upsert.SettingKey, &upsert.SettingValue); err != nil {
+		return nil, err
+	}
+
+	return upsert, nil
+}
+
+func (s *Store) ListUserSettings(ctx context.Context, userId int) ([]*api.UserSetting, error) {
+	query := `
+		SELECT user_id, setting_key, setting_value
+		FROM user_settings
+		WHERE user_id = ?
+	`
+
+	rows, err := s.db.QueryContext(ctx, query, userId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	list := make([]*api.UserSetting, 0)
+	for rows.Next() {
+		var userSetting api.UserSetting
+		if err := rows.Scan(
+			&userSetting.UserId,
+			&userSetting.SettingKey,
+			&userSetting.SettingValue,
+		); err != nil {
+			return nil, err
+		}
+		list = append(list, &userSetting)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return list, nil
+}
