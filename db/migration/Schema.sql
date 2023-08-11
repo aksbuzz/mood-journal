@@ -25,8 +25,6 @@ CREATE TABLE IF NOT EXISTS moods (
 
 CREATE INDEX IF NOT EXISTS idx_moods_user_id ON moods (user_id);
 
-DROP TABLE user_settings;
-
 -- users-settings
 CREATE TABLE IF NOT EXISTS user_settings (
   user_id INTEGER NOT NULL,
