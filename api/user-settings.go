@@ -11,7 +11,7 @@ const (
 )
 
 var (
-	UserSettingLocaleValue   = []string{"en", "hi"}
+	UserSettingLocaleValue   = []string{"en", "es", "hi"}
 	UserSettingThemeValue    = []string{"system", "light", "dark"}
 	UserSettingMoodViewValue = []string{"list", "grid"}
 )
