@@ -23,7 +23,7 @@ func (s *Store) CreateUser(ctx context.Context, createUser *api.User) (*api.User
 	); err != nil {
 		return nil, err
 	}
-
+	s.userCache.Set(&user)
 	return &user, nil
 }
 
@@ -66,11 +66,17 @@ func (s *Store) UpdateUser(ctx context.Context, updateUser *api.UpdateUser) (*ap
 	); err != nil {
 		return nil, err
 	}
-
+	s.userCache.Set(&user)
 	return &user, nil
 }
 
 func (s *Store) FindUser(ctx context.Context, findUser *api.FindUser) (*api.User, error) {
+	if findUser.ID != nil {
+		if user, ok := s.userCache.Get(); ok {
+			return user.(*api.User), nil
+		}
+	}
+
 	list, err := s.ListUsers(ctx, findUser)
 	if err != nil {
 		return nil, err
@@ -81,6 +87,7 @@ func (s *Store) FindUser(ctx context.Context, findUser *api.FindUser) (*api.User
 	}
 
 	user := list[0]
+	s.userCache.Set(user)
 	return user, nil
 }
 
