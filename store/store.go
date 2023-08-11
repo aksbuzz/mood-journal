@@ -1,14 +1,22 @@
 package store
 
-import "database/sql"
+import (
+	"database/sql"
+	"time"
+
+	"github.com/aksbuzz/mood-journal/internal/cache"
+)
 
 type Store struct {
-	db *sql.DB
+	db        *sql.DB
+	userCache *cache.Cache
 }
 
 func New(db *sql.DB) *Store {
+	c := cache.NewCache(time.Hour*24, "user")
 	return &Store{
-		db: db,
+		db:        db,
+		userCache: c,
 	}
 }
 
