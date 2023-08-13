@@ -15,7 +15,7 @@ import (
 
 func Execute() {
 	ctx, cancel := context.WithCancel(context.Background())
-	db := db.NewDB()
+	db := db.New()
 	if err := db.Open(ctx); err != nil {
 		cancel()
 		log.Error(fmt.Printf("Failed to open DB, error: %+v\n", err))
@@ -23,7 +23,7 @@ func Execute() {
 	}
 
 	store := store.New(db.DBInstance)
-	s, err := server.NewServer(ctx, store)
+	s, err := server.New(ctx, store)
 	if err != nil {
 		cancel()
 		log.Error(fmt.Printf("Failed to create new Server, error: %+v\n", err))

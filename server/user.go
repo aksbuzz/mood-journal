@@ -50,7 +50,7 @@ func (s *Server) registerUserRoutes(r fiber.Router) {
 		if err := request.Validate(); err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(errorResponse("invalid request body", err))
 		}
-		updateUser := request.GetUpdateUser(userId)
+		updateUser := request.UpdateUser(userId)
 		user, err := s.Store.UpdateUser(ctx, updateUser)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(errorResponse("failed to update user", err))

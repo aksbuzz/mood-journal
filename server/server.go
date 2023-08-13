@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/aksbuzz/mood-journal/internal/middleware/requestid"
 	"github.com/aksbuzz/mood-journal/store"
 	jwtware "github.com/gofiber/contrib/jwt"
 	"github.com/gofiber/fiber/v2"
@@ -11,7 +12,6 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
-	"github.com/google/uuid"
 )
 
 type Server struct {
@@ -20,7 +20,7 @@ type Server struct {
 	Secret string
 }
 
-func NewServer(ctx context.Context, store *store.Store) (*Server, error) {
+func New(ctx context.Context, store *store.Store) (*Server, error) {
 	log.Info("Creating new Server")
 	f := fiber.New()
 	signingKeySecret := "secret"
@@ -36,11 +36,7 @@ func NewServer(ctx context.Context, store *store.Store) (*Server, error) {
 		AllowOrigins: "*",
 		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
 	}))
-	f.Use(func(c *fiber.Ctx) error {
-		requestId := uuid.NewString()
-		c.Locals("request_id", requestId)
-		return c.Next()
-	})
+	f.Use(requestid.New())
 	f.Use(logger.New(logger.Config{
 		Format: "[${time}] ${method} ${url} ${status} ${error}\n",
 	}))

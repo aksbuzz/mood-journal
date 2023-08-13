@@ -21,7 +21,7 @@ func (s *Store) CreateUser(ctx context.Context, createUser *api.User) (*api.User
 	).Scan(
 		&user.ID, &user.CreatedAt, &user.UpdatedAt, &user.Username,
 	); err != nil {
-		return nil, err
+		return nil, FormatError(err)
 	}
 	s.userCache.Set(&user)
 	return &user, nil
@@ -64,7 +64,7 @@ func (s *Store) UpdateUser(ctx context.Context, updateUser *api.UpdateUser) (*ap
 		&user.Email,
 		&user.AvatarURL,
 	); err != nil {
-		return nil, err
+		return nil, FormatError(err)
 	}
 	s.userCache.Set(&user)
 	return &user, nil
@@ -79,11 +79,11 @@ func (s *Store) FindUser(ctx context.Context, findUser *api.FindUser) (*api.User
 
 	list, err := s.ListUsers(ctx, findUser)
 	if err != nil {
-		return nil, err
+		return nil, FormatError(err)
 	}
 
 	if len(list) == 0 {
-		return nil, nil
+		return nil, FormatError(err)
 	}
 
 	user := list[0]
@@ -123,7 +123,7 @@ func (s *Store) ListUsers(ctx context.Context, findUser *api.FindUser) ([]*api.U
 
 	rows, err := s.db.QueryContext(ctx, query, args...)
 	if err != nil {
-		return nil, err
+		return nil, FormatError(err)
 	}
 	defer rows.Close()
 
@@ -140,13 +140,13 @@ func (s *Store) ListUsers(ctx context.Context, findUser *api.FindUser) ([]*api.U
 			&user.PasswordHash,
 			&user.AvatarURL,
 		); err != nil {
-			return nil, err
+			return nil, FormatError(err)
 		}
 		list = append(list, &user)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, err
+		return nil, FormatError(err)
 	}
 
 	return list, nil
@@ -161,7 +161,7 @@ func (s *Store) UpsertUserSetting(ctx context.Context, upsert *api.UserSetting) 
 	`
 
 	if _, err := s.db.ExecContext(ctx, query, &upsert.UserId, &upsert.SettingKey, &upsert.SettingValue); err != nil {
-		return nil, err
+		return nil, FormatError(err)
 	}
 
 	return upsert, nil
@@ -176,7 +176,7 @@ func (s *Store) ListUserSettings(ctx context.Context, userId int) ([]*api.UserSe
 
 	rows, err := s.db.QueryContext(ctx, query, userId)
 	if err != nil {
-		return nil, err
+		return nil, FormatError(err)
 	}
 	defer rows.Close()
 
@@ -188,13 +188,13 @@ func (s *Store) ListUserSettings(ctx context.Context, userId int) ([]*api.UserSe
 			&userSetting.SettingKey,
 			&userSetting.SettingValue,
 		); err != nil {
-			return nil, err
+			return nil, FormatError(err)
 		}
 		list = append(list, &userSetting)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, err
+		return nil, FormatError(err)
 	}
 
 	return list, nil

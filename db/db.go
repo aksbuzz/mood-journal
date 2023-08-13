@@ -26,7 +26,7 @@ type DB struct {
 	DBInstance *sql.DB
 }
 
-func NewDB() *DB {
+func New() *DB {
 	return &DB{}
 }
 

@@ -13,7 +13,7 @@ type Store struct {
 }
 
 func New(db *sql.DB) *Store {
-	c := cache.NewCache(time.Hour*24, "user")
+	c := cache.New(time.Hour*24, "user")
 	return &Store{
 		db:        db,
 		userCache: c,

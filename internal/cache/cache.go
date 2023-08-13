@@ -11,7 +11,7 @@ type Cache struct {
 	ttl   time.Duration
 }
 
-func NewCache(ttl time.Duration, key string) *Cache {
+func New(ttl time.Duration, key string) *Cache {
 	return &Cache{
 		ttl: ttl,
 		key: key,

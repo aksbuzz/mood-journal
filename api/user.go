@@ -60,7 +60,7 @@ func (p *PatchUserRequest) Validate() error {
 	return nil
 }
 
-func (p *PatchUserRequest) GetUpdateUser(userId *int) *UpdateUser {
+func (p *PatchUserRequest) UpdateUser(userId *int) *UpdateUser {
 	currTime := time.Now().Unix()
 	updateUser := &UpdateUser{
 		ID:        userId,
