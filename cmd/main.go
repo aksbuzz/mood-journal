@@ -2,31 +2,38 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/aksbuzz/mood-journal/config"
 	"github.com/aksbuzz/mood-journal/db"
 	"github.com/aksbuzz/mood-journal/server"
 	"github.com/aksbuzz/mood-journal/store"
 	"github.com/gofiber/fiber/v2/log"
 )
 
+var configFilePath = "config/config.yaml"
+
 func Execute() {
 	ctx, cancel := context.WithCancel(context.Background())
-	db := db.New()
+	cfg, err := config.New(configFilePath)
+	if err != nil {
+		cancel()
+		log.Errorf("Failed to open Config file, error: %+v\n", err)
+	}
+	db := db.New(cfg)
 	if err := db.Open(ctx); err != nil {
 		cancel()
-		log.Error(fmt.Printf("Failed to open DB, error: %+v\n", err))
+		log.Errorf("Failed to open DB, error: %+v\n", err)
 		return
 	}
 
 	store := store.New(db.DBInstance)
-	s, err := server.New(ctx, store)
+	s, err := server.New(ctx, store, cfg)
 	if err != nil {
 		cancel()
-		log.Error(fmt.Printf("Failed to create new Server, error: %+v\n", err))
+		log.Errorf("Failed to create new Server, error: %+v\n", err)
 		return
 	}
 
@@ -35,14 +42,14 @@ func Execute() {
 
 	go func() {
 		sig := <-c
-		log.Info(fmt.Printf("%s received.\n", sig.String()))
+		log.Infof("%s received.\n", sig.String())
 		s.Shutdown()
 		cancel()
 	}()
 
 	if err := s.Start(); err != nil {
 		cancel()
-		log.Error(fmt.Printf("Failed to start Server, error: %+v\n", err))
+		log.Errorf("Failed to start Server, error: %+v\n", err)
 		return
 	}
 

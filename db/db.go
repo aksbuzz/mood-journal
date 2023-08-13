@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/aksbuzz/mood-journal/config"
 	"github.com/gofiber/fiber/v2/log"
 )
 
@@ -17,39 +18,40 @@ var migrationFS embed.FS
 var seedFS embed.FS
 
 var (
-	DatabaseFileName = "moods.db"
-	SchemaFileName   = "Schema.sql"
-	SeedFileName     = "Seed.sql"
+	SchemaFileName = "Schema.sql"
+	SeedFileName   = "Seed.sql"
 )
 
 type DB struct {
 	DBInstance *sql.DB
+	cfg        *config.Config
 }
 
-func New() *DB {
-	return &DB{}
+func New(cfg *config.Config) *DB {
+	return &DB{
+		cfg: cfg,
+	}
 }
 
 func (db *DB) Open(ctx context.Context) (err error) {
-	if _, err := os.Stat(DatabaseFileName); os.IsNotExist(err) {
-		file, err := os.Create(DatabaseFileName)
+	dbFilename := db.cfg.Database.Filename
+	if _, err := os.Stat(dbFilename); os.IsNotExist(err) {
+		file, err := os.Create(dbFilename)
 		if err != nil {
 			return err
 		}
 		defer file.Close()
 	}
 	log.Info("Opening DB")
-	sqliteDB, err := sql.Open("sqlite", DatabaseFileName)
+	sqliteDB, err := sql.Open("sqlite", dbFilename)
 	if err != nil {
 		return err
 	}
 	db.DBInstance = sqliteDB
-	// Apply Migrations
 	log.Info("Applying latest migrations")
 	if err := db.applyMigrations(ctx); err != nil {
 		return err
 	}
-	// Seed the database
 	if err := db.seedDB(ctx); err != nil {
 		return err
 	}

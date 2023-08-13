@@ -17,8 +17,9 @@ func New(config ...Config) func(c *fiber.Ctx) error {
 		cfg = Config{
 			ContextKey: defaultContextKey,
 		}
+	} else {
+		cfg = config[0]
 	}
-	cfg = config[0]
 	if cfg.ContextKey == "" {
 		cfg.ContextKey = defaultContextKey
 	}

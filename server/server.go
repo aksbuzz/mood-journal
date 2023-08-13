@@ -2,8 +2,8 @@ package server
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/aksbuzz/mood-journal/config"
 	"github.com/aksbuzz/mood-journal/internal/middleware/requestid"
 	"github.com/aksbuzz/mood-journal/store"
 	jwtware "github.com/gofiber/contrib/jwt"
@@ -17,10 +17,11 @@ import (
 type Server struct {
 	f      *fiber.App
 	Store  *store.Store
+	Config *config.Config
 	Secret string
 }
 
-func New(ctx context.Context, store *store.Store) (*Server, error) {
+func New(ctx context.Context, store *store.Store, cfg *config.Config) (*Server, error) {
 	log.Info("Creating new Server")
 	f := fiber.New()
 	signingKeySecret := "secret"
@@ -29,6 +30,7 @@ func New(ctx context.Context, store *store.Store) (*Server, error) {
 		f:      f,
 		Store:  store,
 		Secret: signingKeySecret,
+		Config: cfg,
 	}
 
 	f.Use(recover.New())
@@ -60,18 +62,19 @@ func New(ctx context.Context, store *store.Store) (*Server, error) {
 
 func (s *Server) Start() error {
 	log.Info("Starting Server")
-	// change on production
-	return s.f.Listen("127.0.0.1:8080")
+	port := s.Config.Server.Port
+	host := s.Config.Server.Host
+	return s.f.Listen(host + port)
 }
 
 func (s *Server) Shutdown() {
 	log.Info("Shutting down!!")
 	if err := s.f.Shutdown(); err != nil {
-		log.Error(fmt.Printf("Failed to shutdown Server, error: %+v\n", err))
+		log.Errorf("Failed to shutdown Server, error: %+v\n", err)
 	}
 
 	if err := s.Store.GetDB().Close(); err != nil {
-		log.Error(fmt.Printf("Failed to close DB, error: %+v\n", err))
+		log.Errorf("Failed to close DB, error: %+v\n", err)
 	}
 
 	log.Info("Stopped properly.")
